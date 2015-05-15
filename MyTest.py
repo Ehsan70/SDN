@@ -4,6 +4,7 @@ from pox.core import core                     # Main POX object
 from pox.lib.util import dpid_to_str
 import pox.openflow.libopenflow_01 as of      # OpenFlow 1.0 library
 import time
+import pox.lib.packet as pkt
 #import pox.openflow as of
 
 # Create a logger for this component
@@ -46,6 +47,10 @@ class MyTest (object):
                  "\t\t Peer = {0}\n".format(p.peer)
         log.info(m)
         self.conn = event.connection
+
+
+
+
 
     def flood(self, event, message = None):
         """ Floods the packet """
@@ -100,15 +105,13 @@ class MyTest (object):
         """
         Handles packet in messages from the switch.
         """
-        log.info("Packet in was received. Processing the packet ...")
-
         packet = event.parsed  # This is the parsed packet data.
         if not packet.parsed:
             log.warning("Ignoring incomplete packet")
             return
 
         """ Use source address and switch port to update address/port table """
-        log.info("\tSource of the packet -> {0}\n\t\tDestination of the packet -> {1}".format(packet.src, packet.dst))
+        log_msg = "Packet Received. \nSource of the packet -> {0}\nDestination of the packet -> {1}".format(packet.src, packet.dst)
         self.macToPort[packet.src] = event.port
 
         """
@@ -120,7 +123,7 @@ class MyTest (object):
             encapsulated in the payload of an Ethernet Frame.
         """
         if packet.type == packet.LLDP_TYPE or packet.dst.isBridgeFiltered():
-            log.info("\tPacket type is {0}. Drop the packet.".format(str(packet.type)))
+            log_msg += "\n\tPacket type is {0}. Drop the packet.".format(str(packet.type))
             # drop() --> Note that this function is not implemented
             self.drop(event=event, packet=packet)
             return
@@ -130,7 +133,7 @@ class MyTest (object):
                 Flood the packet
         """
         if packet.dst.is_multicast:
-            log.info("\tPacket is multicast. Doing nothing for now.")
+            log_msg += "\n\tPacket is multicast. Flood the packet."
             # flood()
             self.flood(event=event)
         else:
@@ -140,7 +143,7 @@ class MyTest (object):
                     Flood the packet
             """
             if packet.dst not in self.macToPort:
-                log.info("\tPort for {0} is unknown so flood he packet. ".format(packet.dst))
+                log_msg += "\n\tPort for {0} is unknown so flood he packet. ".format(packet.dst)
                 self.flood(event=event, message="Port for %s unknown -- flooding " % (packet.dst, ))
             else:
                 """
@@ -149,12 +152,26 @@ class MyTest (object):
                         Drop packet and similar ones for a while
                 """
                 port = self.macToPort[packet.dst]
+                log_msg += "\n\tFor packets with dest = {0} use out port {1}".format(packet.dst, port)
                 if port == event.port:
-                    log.warning("\tSame port for packet from {0} -> {1} on {2}.{3}. Drop the packet. Not "
+                    log.warning("\n\tSame port for packet from {0} -> {1} on {2}.{3}. \n\t\tDrop the packet. Not "
                                 "implemented".format(packet.src, packet.dst, dpid_to_str(event.dpid), port))
                     # drop(10) --> Note that this function is not implemented
                     return
+                """
+                 # Send the first flow msg
+                first_flow = of.ofp_flow_mod()
+                first_flow.match._in_port = 1
+                first_flow.actions.append(of.ofp_action_output(port=2))
+                self.conn.send(first_flow)
 
+                # send the second flow msg
+                sec_flow = of.ofp_flow_mod()
+                sec_flow.match._in_port = 2
+                sec_flow.actions.append(of.ofp_action_output(port=1))
+                self.conn.send(sec_flow)
+                """
+                """
                 port = self.macToPort[packet.dst]
                 # TODO: Fix these strings
                 log.info("\tInstalling a flow : "
@@ -167,6 +184,27 @@ class MyTest (object):
                 flow_msg.actions.append(of.ofp_action_output(port=port))
                 flow_msg.data = event.ofp
                 self.conn.send(flow_msg)
+                """
+                pot = 0
+                if (packet.dst.toStr == "00:00:00:00:00:02") == 0:
+                    pot = 1
+                if (packet.dst.toStr() == "00:00:00:00:00:01") == 0:
+                    pot = 2
+                if pot == 0:
+                    log_msg += "toRaw didnt work"
+                # TODO: Fix these strings
+                log_msg += "\n\tInstalling a flow for destination {0}: Setting port to {1}".format(packet.dst.toStr(), pot)
+                flow_msg = of.ofp_flow_mod()
+                flow_msg.match = of.ofp_match.from_packet(packet=packet, in_port=event.port)
+                flow_msg.idle_timeout = 20
+                flow_msg.hard_timeout = 40
+                # TODO: Try to add a single flow
+                flow_msg.actions.append(of.ofp_action_output(port=pot))
+                flow_msg.data = event.ofp
+                self.conn.send(flow_msg)
+
+        log.info(log_msg)
+
 
     def _handle_PacketOut (self, event):
         log.info("Packet out was received")
