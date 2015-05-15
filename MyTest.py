@@ -23,15 +23,31 @@ class MyTest (object):
     The object event has three properties:
         .connection - A reference to the switch connection that caused the event
         .dpid - The DPID of the switch that caused the event
-        .ofp - The openflow message tha tcaused the event to fire up (from libopenflow)
+        .ofp - The openflow message tha caused the event to fire up (from libopenflow)
+            Note that libopenflow_01 is the place where you have all types of OF messages.
 
     So right now a reference to the switch is copied to the object.
     """
     def _handle_ConnectionUp(self, event):
-        log.info("The controller is connected to {}".format(event.src))
+        log.info("Event DPID (i.e. DPID of the switch) : {0}\n".format(event.dpid) +
+                 "Number of tables in the Switch : {0}\n".format(event.ofp.n_tables) +
+                 "Number of buffers in the switch : {0}\n".format(event.ofp.n_buffers))
+
+        m = "Ports of switches: \n"
+        for p in event.ofp.ports:
+            m += "\t Port Name: {0}\n".format(p) + "\t\t Port Number = {0}\n".format(p.port_no) + \
+                 "\t\t Hardware Address = {0}\n".format(p.hw_addr) + \
+                 "\t\t Name = {0}\n".format(p.name) + \
+                 "\t\t Configuration = {0}\n".format(p.config) + \
+                 "\t\t State = {0}\n".format(p.state) + \
+                 "\t\t Curr = {0}\n".format(p.curr) + \
+                 "\t\t Advertised = {0}\n".format(p.advertised) + \
+                 "\t\t Supported = {0}\n".format(p.supported) + \
+                 "\t\t Peer = {0}\n".format(p.peer)
+        log.info(m)
         self.conn = event.connection
 
-    def flood (self, event, message = None):
+    def flood(self, event, message = None):
         """ Floods the packet """
         msg = of.ofp_packet_out()
         if time.time() - self.conn.connect_time >= _flood_delay:
@@ -92,13 +108,16 @@ class MyTest (object):
             return
 
         """ Use source address and switch port to update address/port table """
-        log.info("\tSource of the packet is {0}".format(packet.src))
+        log.info("\tSource of the packet -> {0}\n\t\tDestination of the packet -> {1}".format(packet.src, packet.dst))
         self.macToPort[packet.src] = event.port
 
         """
         If Ethertype is LLDP or the packet's destination address is a Bridge Filtered address?
             Yes:
                 Drop packet -- don't forward link-local traffic (LLDP, 802.1x)
+
+        Note that EtherType is a two-octet field in an Ethernet frame. It is used to indicate which protocol is
+            encapsulated in the payload of an Ethernet Frame.
         """
         if packet.type == packet.LLDP_TYPE or packet.dst.isBridgeFiltered():
             log.info("\tPacket type is {0}. Drop the packet.".format(str(packet.type)))
@@ -121,7 +140,7 @@ class MyTest (object):
                     Flood the packet
             """
             if packet.dst not in self.macToPort:
-                log.info("\tPort for %s is unknown so flood he packet. Not implemented".format(packet.dst))
+                log.info("\tPort for {0} is unknown so flood he packet. ".format(packet.dst))
                 self.flood(event=event, message="Port for %s unknown -- flooding " % (packet.dst, ))
             else:
                 """
@@ -137,17 +156,17 @@ class MyTest (object):
                     return
 
                 port = self.macToPort[packet.dst]
-                log.info("\tInstalling a flow from h1 to h2")
+                # TODO: Fix these strings
+                log.info("\tInstalling a flow : "
+                         "Setting port to {0}".format(port))
                 flow_msg = of.ofp_flow_mod()
                 flow_msg.match = of.ofp_match.from_packet(packet=packet, in_port=event.port)
                 flow_msg.idle_timeout = 20
                 flow_msg.hard_timeout = 40
+                # TODO: Try to add a single flow
                 flow_msg.actions.append(of.ofp_action_output(port=port))
                 flow_msg.data = event.ofp
                 self.conn.send(flow_msg)
-
-
-        #msg = of.ofp_packet_in()
 
     def _handle_PacketOut (self, event):
         log.info("Packet out was received")
