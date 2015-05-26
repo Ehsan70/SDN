@@ -27,7 +27,7 @@ You need python. I have tested my code on Ubuntu 14.
   sudo ./pox.py MyTest
   ``` 
 
-pox.py looks at ext directory and tries to find MyTest.py. Note that you should not put the `.py` in the command. You just need the command name. 
+`pox.py` looks at ext directory and tries to find `MyTest.py`. Note that you should not put the `.py` in the command. You just need the command name. 
 
 # Note 
 At directory `pox/ext` you can make your own controler. This directory is not under version control for `pox`, so it makes a good place to put your own projects. Files of this repo should be placed in that dir. 
