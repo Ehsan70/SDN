@@ -18,7 +18,7 @@ It depends if you are already working on anything or not. I assume you are new, 
 rm -r ext/
 mv SDN/ ext/
 ```
-3. So now you have the files setup. Make sure you have the files from this repo in `ext` directory. The reason for that is the fact that 
+4. So now you have the files setup. Make sure you have the files from this repo in `ext` directory. The reason for that is the fact that 
 pox assumes external files are places in that directory. 
 You can run a `MyTest` controller by exceuting: 
 ```
