@@ -1,9 +1,9 @@
 Setting up a very simple controller using pox. 
 
-#Requirements and Environment#
+#Requirements and Environment
 You need python. I have tested my code on Ubuntu 14.  
 
-#Setup#
+#Setup
 1. You first need to clone pox repository:
 `git clone https://github.com/noxrepo/pox.git`
 2. Then switch into `/pox/` directory and clone this repository: 
@@ -26,6 +26,6 @@ You can run a `MyTest` controller by exceuting:
 cd ..
 sudo ./pox.py MyTest
 ```
-# Note # 
+# Note 
 At directory `pox/ext` you can make your own controler. This directory is not under version control for `pox`, so it makes a good place to
 put your own projects.
