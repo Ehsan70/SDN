@@ -37,4 +37,13 @@ mininet>
 
 ```
 > Note that since you have not started any controller, the `pingall` is failing. 
-
+  ```
+  mininet> pingall
+  *** Ping: testing ping reachability
+  h1 -> X X X 
+  h2 -> X X X 
+  h3 -> X X X 
+  h4 -> X X X 
+  *** Results: 100% dropped (0/12 received)
+  mininet> 
+  ```
