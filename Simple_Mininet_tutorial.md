@@ -47,3 +47,8 @@ mininet>
   *** Results: 100% dropped (0/12 received)
   mininet> 
   ```
+
+
+## Stoping the Mininet
+
+In the minint run `quit`. When it doesn also run `sudo mn -c`, this will clean the environment.
