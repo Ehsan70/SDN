@@ -5,7 +5,6 @@ from mininet.net import Mininet
 from mininet.log import setLogLevel, info
 from mininet.node import RemoteController
 from mininet.cli import CLI
-from mininet.link import TCLink
 """
 Instructions to run the topo:
     1. Go to directory where this fil is.
@@ -29,13 +28,13 @@ class SimplePktSwitch(Topo):
         h1 = self.addHost('h1')
         h2 = self.addHost('h2')
         h3 = self.addHost('h3')
-        h3 = self.addHost('h4')
+        h4 = self.addHost('h4')
 
         # Adding switches
         s1 = self.addSwitch('s1', dpid="0000000000000001")
         s2 = self.addSwitch('s2', dpid="0000000000000002")
         s3 = self.addSwitch('s3', dpid="0000000000000003")
-        s3 = self.addSwitch('s4', dpid="0000000000000004")
+        s4 = self.addSwitch('s4', dpid="0000000000000004")
 
         # Add links
         self.addLink(h1, s1)
