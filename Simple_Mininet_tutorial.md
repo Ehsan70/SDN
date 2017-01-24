@@ -4,9 +4,6 @@
 
 <b>Environment: </b> I have used the VM from sdn hub, I recommond you do the same. Link for installation is provided below: http://sdnhub.org/tutorials/sdn-tutorial-vm/
 
-<b>Notations: </b>
- - `>` means the linuc command line <br>
- - `mininet>` means the mininet command line
 
 # Start the network: 
 In order to start the network you only need to run the command `sudo -E python <filename>`
